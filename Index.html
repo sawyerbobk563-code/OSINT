@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .nav-overlay {
+            transition: transform 0.3s ease-in-out;
+        }
+        .hidden-nav {
+            transform: translateX(-100%);
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+
+    <!-- Login Overlay -->
+    <div id="login-view" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-[100]">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full border border-gray-300">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center p-3 bg-gray-100 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Welcome Project404</h2>
+                <p class="text-sm text-gray-500 mt-2">Enter credentials to proceed</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                    Password
+                </label>
+                <input 
+                    class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 mb-2 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
+                    id="password" 
+                    type="password" 
+                    placeholder="Enter password..."
+                >
+                <p id="error-msg" class="text-red-500 text-xs font-bold hidden flex items-center gap-1 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Access Denied: Incorrect Password
+                </p>
+            </div>
+            
+            <button 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200" 
+                type="button" 
+                onclick="checkPassword()"
+            >
+                Login
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Application Container (Hidden Initially) -->
+    <div id="app-container" class="hidden">
+        
+        <!-- Navigation Bar -->
+        <nav class="bg-gray-100 border-b border-gray-300 p-4 sticky top-0 z-50 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button id="menu-btn" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 id="view-title" class="text-xl font-bold tracking-tight">OSINT Tool List</h1>
+            </div>
+        </nav>
+
+        <!-- Slide-out Menu -->
+        <div id="side-nav" class="fixed inset-0 z-40 hidden">
+            <div id="nav-backdrop" class="absolute inset-0 bg-black/50"></div>
+            <div class="absolute inset-y-0 left-0 w-64 bg-white shadow-xl p-6 nav-overlay hidden-nav" id="nav-content">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Navigation</h2>
+                <ul class="space-y-4">
+                    <li>
+                        <button onclick="switchView('tools')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🛠 Tool Directory
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('guide')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            📖 Recon Guide
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('ai')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🤖 AI Hub
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="p-6 max-w-4xl mx-auto">
+            
+            <!-- View 1: Tool List -->
+            <div id="tools-view">
+                <div class="mb-6">
+                    <label for="search" class="block text-sm font-bold mb-1">Search Tools:</label>
+                    <input
+                        id="search"
+                        type="text"
+                        class="w-full p-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Type to filter..."
+                        oninput="filterTools()"
+                    >
+                </div>
+                <div id="tools-container" class="space-y-8"></div>
+            </div>
+
+            <!-- View 2: Recon Guide -->
+            <div id="guide-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Ethical Hacker's Reconnaissance Guide</h2>
+                <p class="mb-6 italic text-gray-600">Follow this sequence to build a comprehensive profile of a target URL.</p>
+                
+                <div class="space-y-10">
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 1: Passive Domain Intelligence</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Understand ownership, history, and the broader organizational footprint without alerting the target.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://osintframework.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">OSINT Framework</a>:</strong> Start here to see if there are additional specific categories (like social media or archives) you need to pivot to.</li>
+                            <li><strong><a href="https://whois.domaintools.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Whois DomainTools</a>:</strong> Identify the registrar, registration dates, and potential contact info.</li>
+                            <li><strong><a href="https://crt.sh/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">crt.sh</a>:</strong> Search Certificate Transparency logs. This is one of the best ways to find hidden subdomains that have SSL certificates.</li>
+                            <li><strong><a href="https://viewdns.info/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">ViewDNS.info</a>:</strong> Run a "Reverse IP" check to see what other sites are hosted on the same server.</li>
+                            <li><strong><a href="https://spyonweb.net/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">SpyOnWeb</a>:</strong> Look for shared Google Analytics or Adsense IDs to find other websites owned by the same entity.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 2: DNS & Infrastructure Mapping</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Map out the technical "map" of the target.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://dnsdumpster.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">DNSDumpster</a>:</strong> Create a visual map of the target’s DNS records and subdomains.</li>
+                            <li><strong><a href="https://dnschecker.org/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">DNS Checker</a>:</strong> Verify that the DNS records you found are consistent globally.</li>
+                            <li><strong><a href="https://robtex.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Robtex</a>:</strong> Dive deeper into the relationships between the IP, the domain, and its neighbors.</li>
+                            <li><strong><a href="https://mxtoolbox.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">MXToolbox</a>:</strong> Check the mail server configuration (MX records) and SPF/DMARC records for potential email spoofing vulnerabilities.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 3: Web Technology & Content Analysis</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Identify the "Stack" (OS, CMS, Plugins) and hidden files.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://web-check.xyz/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Web-Check</a>:</strong> A comprehensive "one-stop" tool to see the technology stack, headers, and basic security flaws.</li>
+                            <li><strong><a href="https://urlscan.io/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">URLScan.io</a>:</strong> Take a "safe" look at the site's behavior, scripts loaded, and DOM structure.</li>
+                            <li><strong><a href="https://www.mysitemapgenerator.com/service/index.html" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">MySitemapGenerator</a>:</strong> Use this to crawl the site and find paths or pages that aren't immediately visible in the navigation.</li>
+                            <li><strong><a href="https://grep.app/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Grep.app</a>:</strong> Search for the domain or specific strings in public code repositories to find leaked keys or configuration files.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 4: Attack Surface & Vulnerability Scanning</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Search for open ports and known service vulnerabilities.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://www.shodan.io/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Shodan</a> & <a href="https://platform.censys.io/home" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Censys</a>:</strong> See what the "Internet" already knows about this server (open ports, old versions of software, heartbleed, etc.).</li>
+                            <li><strong><a href="https://pentest-tools.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Pentest-Tools</a>:</strong> Run a lightweight vulnerability scan to find low-hanging fruit like outdated versions or missing security headers.</li>
+                            <li><strong><a href="https://www.ssllabs.com/ssltest/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">SSL Labs</a>:</strong> Specifically check the strength of the encryption and look for weak ciphers or expired certs.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 5: IP Reputation & Connectivity</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Check if the server is already compromised or on a watch list.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://www.ipvoid.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">IPVoid</a> & <a href="https://blacklistchecker.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Blacklist Checker</a>:</strong> Determine if the IP has been flagged for malicious activity in the past.</li>
+                            <li><strong><a href="https://www.iplocation.net/ip-lookup" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">IP Location</a>:</strong> Confirm the physical hosting location (useful for legal/jurisdiction scope).</li>
+                            <li><strong><a href="https://port.tools/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Port.tools</a> & <a href="https://www.whatsmyip.org/ping/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">WhatIsMyIP Ping</a>:</strong> Perform a quick connectivity test to see if the target responds to pings or has common ports open.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 6: Human/Metadata Pivoting</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Identify the people behind the site for potential social engineering or credential reuse.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="http://metadataviewer.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">MetaDataViewer</a>:</strong> Run files (PDFs/DOCX) through here to find usernames and software paths.</li>
+                            <li><strong><a href="https://hackdb.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">HackDB</a>:</strong> Check if any corporate emails found in previous steps appear in known data breaches.</li>
+                            <li><strong><a href="https://www.fastpeoplesearch.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">FastPeopleSearch</a> & <a href="https://arrests.org/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Arrests.org</a>:</strong> Use these to build a profile on individuals identified in WHOIS or Metadata.</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+
+            <!-- View 3: AI Hub -->
+            <div id="ai-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">AI Hub</h2>
+                <div id="ai-container" class="space-y-10">
+                    <!-- Categories will be injected via JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Authentication
+        function checkPassword() {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput.value === 'admin') {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+                passwordInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+            }
+        }
+
+        document.getElementById('password').addEventListener('keypress', (e) => e.key === 'Enter' && checkPassword());
+        document.getElementById('password').addEventListener('input', function() {
+            document.getElementById('error-msg').classList.add('hidden');
+            this.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+        });
+
+        // App Navigation Logic
+        function switchView(view) {
+            document.getElementById('tools-view').classList.add('hidden');
+            document.getElementById('guide-view').classList.add('hidden');
+            document.getElementById('ai-view').classList.add('hidden');
+            
+            document.getElementById(`${view}-view`).classList.remove('hidden');
+            document.getElementById('view-title').innerText = 
+                view === 'tools' ? 'OSINT Tool List' : 
+                view === 'guide' ? 'Recon Guide' : 'AI Hub';
+            
+            toggleMenu();
+        }
+
+        function toggleMenu() {
+            const sideNav = document.getElementById('side-nav');
+            const navContent = document.getElementById('nav-content');
+            if (sideNav.classList.contains('hidden')) {
+                sideNav.classList.remove('hidden');
+                setTimeout(() => navContent.classList.remove('hidden-nav'), 10);
+            } else {
+                navContent.classList.add('hidden-nav');
+                setTimeout(() => sideNav.classList.add('hidden'), 300);
+            }
+        }
+
+        document.getElementById('menu-btn').addEventListener('click', toggleMenu);
+        document.getElementById('nav-backdrop').addEventListener('click', toggleMenu);
+
+        // Data Structure for OSINT Tools
+        const toolsData = [
+            {
+                category: "Frameworks & Aggregators",
+                items: [
+                    { name: "OSINT Framework", url: "https://osintframework.com/", desc: "Comprehensive directory of OSINT tools." },
+                    { name: "OSINT.sh", url: "https://osint.sh/", desc: "Various lookups and intelligence scripts." }
+                ]
+            },
+            {
+                category: "DNS & Domain Intelligence",
+                items: [
+                    { name: "DNSDumpster", url: "https://dnsdumpster.com/", desc: "Subdomain discovery and mapping." },
+                    { name: "crt.sh", url: "https://crt.sh/", desc: "SSL/TLS certificate search for subdomains." },
+                    { name: "ViewDNS.info", url: "https://viewdns.info/", desc: "Reverse IP and DNS toolset." },
+                    { name: "DNS Checker", url: "https://dnschecker.org/", desc: "Global DNS propagation check." },
+                    { name: "Robtex", url: "https://robtex.com/", desc: "IP and domain relationship analysis." },
+                    { name: "SpyOnWeb", url: "https://spyonweb.net/", desc: "Identifying sites with shared IDs." },
+                    { name: "Whois DomainTools", url: "https://whois.domaintools.com/", desc: "Advanced domain ownership history." }
+                ]
+            },
+            {
+                category: "Scanning & Infrastructure",
+                items: [
+                    { name: "Shodan", url: "https://www.shodan.io/", desc: "Search engine for IoT and web devices." },
+                    { name: "Censys", url: "https://platform.censys.io/home", desc: "Network exposure and device discovery." },
+                    { name: "Web-Check", url: "https://web-check.xyz/", desc: "All-in-one website architecture scanner." },
+                    { name: "URLScan.io", url: "https://urlscan.io/", desc: "Website activity and behavior sandbox." },
+                    { name: "HackerTarget", url: "https://hackertarget.com/", desc: "IP and network intelligence lookups." },
+                    { name: "Pentest-Tools", url: "https://pentest-tools.com/", desc: "Security and vulnerability scanning suite." },
+                    { name: "SSL Labs", url: "https://www.ssllabs.com/ssltest/", desc: "Deep SSL server configuration analysis." },
+                    { name: "CentralOps", url: "https://centralops.net/co/", desc: "Free online network diagnostic tools." },
+                    { name: "Port.tools", url: "https://port.tools/", desc: "Online port scanning and ping." },
+                    { name: "WhatIsMyIP Ping", url: "https://www.whatsmyip.org/ping/", desc: "Ping tool for connectivity testing." }
+                ]
+            },
+            {
+                category: "IP & Reputation",
+                items: [
+                    { name: "IP Location", url: "https://www.iplocation.net/ip-lookup", desc: "Geographic IP mapping." },
+                    { name: "IPVoid", url: "https://www.ipvoid.com/", desc: "Reputation and blacklist auditing." },
+                    { name: "Blacklist Checker", url: "https://blacklistchecker.com/", desc: "Mail server blacklist checking." },
+                    { name: "MXToolbox", url: "https://mxtoolbox.com/", desc: "MX record and email health check." }
+                ]
+            },
+            {
+                category: "Content & Leaks",
+                items: [
+                    { name: "Grep.app", url: "https://grep.app/", desc: "Search through public git repositories." },
+                    { name: "HackDB", url: "https://hackdb.com/", desc: "Credential and leak database search." },
+                    { name: "MySitemapGenerator", url: "https://www.mysitemapgenerator.com/service/index.html", desc: "Crawler for site mapping and discovery." }
+                ]
+            },
+            {
+                category: "Identity & Public Records",
+                items: [
+                    { name: "FastPeopleSearch", url: "https://www.fastpeoplesearch.com/", desc: "Person lookup and public records." },
+                    { name: "Arrests.org", url: "https://arrests.org/", desc: "Mugshots and public arrest records." },
+                    { name: "MetaDataViewer", url: "http://metadataviewer.com/", desc: "Extract hidden file metadata." }
+                ]
+            }
+        ];
+
+        // Data for AI Hub
+        const aiData = [
+            { category: "LLM", items: [
+                { name: "Gemini", url: "https://gemini.google.com/app" },
+                { name: "Copilot", url: "https://copilot.microsoft.com/" },
+                { name: "Grok", url: "https://grok.com/" },
+                { name: "DeepSeek", url: "https://chat.deepseek.com" },
+                { name: "Claude", url: "https://claude.ai/new" },
+                { name: "DeepAI", url: "https://deepai.org/" }
+            ]},
+            { category: "General AI", items: [
+                { name: "NanoChat", url: "https://nanochat.karpathy.ai/" },
+                { name: "Meta AI", url: "https://www.meta.ai/" },
+                { name: "ChatbotApp", url: "https://chat.chatbotapp.ai" },
+                { name: "Kimi", url: "https://www.kimi.com/" },
+                { name: "Nova", url: "https://chat.novaapp.ai/" },
+                { name: "Perplexity", url: "https://www.perplexity.ai/" },
+                { name: "Manus", url: "https://manus.im/" },
+                { name: "Komo", url: "https://komo.ai/" },
+                { name: "Exa", url: "https://exa.ai/" },
+                { name: "Z.ai", url: "https://chat.z.ai/" },
+                { name: "Felo", url: "https://felo.ai/search" },
+                { name: "ChatlyAI", url: "https://chatlyai.app/" },
+                { name: "Qwen", url: "https://qwen.ai/home" },
+                { name: "OpenRouter", url: "https://openrouter.ai/chat?models=z-ai/glm-4.6" },
+                { name: "MiniMax", url: "https://www.minimaxm2.com/en/chat" },
+                { name: "LinerAI", url: "Https://linerai.com" },
+                { name: "You.com", url: "https://you.com/" },
+                { name: "Andi", url: "https://www.aixploria.com/out/Andi" },
+                { name: "Pi", url: "https://pi.ai/talk" },
+                { name: "Mistral", url: "https://chat.mistral.ai/chat" },
+                { name: "Blackbox", url: "https://www.blackbox.ai/" }
+            ]},
+            { category: "Image AI", items: [
+                { name: "Imagen 4", url: "https://www.imagine.art/features/google-imagen-4" },
+                { name: "Ideogram", url: "https://ideogram.ai/" },
+                { name: "Google Flow", url: "https://labs.google/flow/about" },
+                { name: "Sora 2", url: "https://www.easemate.ai/sora-2-ai-video-generator" },
+                { name: "Hailuo AI", url: "https://hailuoai.video/" },
+                { name: "Leonardo AI", url: "https://app.leonardo.ai.com" }
+            ]},
+            { category: "Code AI", items: [
+                { name: "Bolt.new", url: "https://bolt.new/" },
+                { name: "Same.new", url: "https://same.new/" },
+                { name: "WebsiteCloner", url: "https://websitecloner.io/" }
+            ]},
+            { category: "Search Engines", items: [
+                { name: "Bing", url: "https://www.bing.com/" },
+                { name: "Startpage", url: "https://www.startpage.com" },
+                { name: "WebCrawler", url: "https://www.webcrawler.com/" },
+                { name: "Yahoo", url: "https://www.yahoo.com/" },
+                { name: "Qwant", url: "https://www.qwant.com/" },
+                { name: "Yandex", url: "https://www.yandex.com" },
+                { name: "Mojeek", url: "https://www.mojeek.com/" }
+            ]},
+            { category: "Homework / AI Humanizer", items: [
+                { name: "iAsk.ai", url: "https://iask.ai/" },
+                { name: "Grammarly Humanizer", url: "https://www.grammarly.com/ai-humanizer" },
+                { name: "NoteGPT", url: "https://notegpt.io/ai-humanizer" },
+                { name: "GPTZero", url: "https://gptzero.me/" },
+                { name: "Math-GPT", url: "https://math-gpt.org/" },
+                { name: "Quillbot", url: "https://quillbot.com/ai-chat" }
+            ]},
+            { category: "Research AI", items: [
+                { name: "Consensus", url: "https://consensus.app/" },
+                { name: "Reka", url: "https://app.reka.ai/research" },
+                { name: "Phind", url: "https://www.phind.com/" },
+                { name: "Merlin", url: "https://www.getmerlin.in/chat" }
+            ]},
+            { category: "Automated AI", items: [
+                { name: "ATS Checker", url: "https://tripleten.com/tools/ats-resume-checker/" },
+                { name: "Interview Q&A", url: "https://tripleten.com/tools/interview-questions-and-answers-generator/" },
+                { name: "TaxTools", url: "https://aixploria.com/out/TaxToolsAI" },
+                { name: "Prompt Optimizer", url: "https://tripleten.com/tools/prompt-optimizer/" },
+                { name: "Make.com", url: "https://www.make.com/en/login" }
+            ]},
+            { category: "Google AI", items: [
+                { name: "KilledByGoogle", url: "https://killedbygoogle.com/" },
+                { name: "NotebookLM", url: "https://notebooklm.google.com" },
+                { name: "Antigravity", url: "https://antigravity.google/" },
+                { name: "Jules", url: "https://jules.google/" },
+                { name: "Google Labs", url: "https://labs.google.com" },
+                { name: "Opal", url: "https://opal.google/" }
+            ]},
+            { category: "Jailbreak AI", items: [
+                { name: "Coolaj86 Gist", url: "https://gist.github.com/coolaj86/6f4f7b30129b0251f61fa7baaa881516" },
+                { name: "LangGPT Github", url: "https://github.com/langgptai/LLM-Jailbreaks" },
+                { name: "HackGPT Prompts", url: "https://organic-slayer-d96.notion.site/HackGPT-Prompts-2310c24320808041a5f4fe899b034bb4" },
+                { name: "Gandalf Practice", url: "https://gandalf.lakera.ai/baseline" }
+            ]},
+            { category: "List of AI", items: [
+                { name: "AIAgentsList", url: "https://aiagentslist.com/" },
+                { name: "Poe Explore", url: "https://poe.com/explore" },
+                { name: "Aixploria Top 100", url: "https://www.aixploria.com/en/top-100-ai/" },
+                { name: "Ollama", url: "https://ollama.com/" }
+            ]}
+        ];
+
+        // Rendering Functions
+        function renderTools(filter = '') {
+            const container = document.getElementById('tools-container');
+            container.innerHTML = '';
+            const lowerFilter = filter.toLowerCase();
+
+            toolsData.forEach(section => {
+                const filteredItems = section.items.filter(item => 
+                    item.name.toLowerCase().includes(lowerFilter) || 
+                    item.desc.toLowerCase().includes(lowerFilter)
+                );
+
+                if (filteredItems.length > 0) {
+                    const sectionEl = document.createElement('section');
+                    let html = `<h2 class="text-lg font-black bg-gray-100 p-1 mb-3 uppercase tracking-tight">${section.category}</h2>`;
+                    html += `<ul class="space-y-4">`;
+                    filteredItems.forEach(tool => {
+                        html += `
+                            <li class="border-l-4 border-gray-300 pl-4">
+                                <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="text-blue-700 font-bold underline hover:text-blue-900">
+                                    ${tool.name}
+                                </a>
+                                <p class="text-sm text-gray-700 mt-1">${tool.desc}</p>
+                                <p class="text-xs text-gray-400 font-mono mt-1">${tool.url}</p>
+                            </li>
+                        `;
+                    });
+                    html += `</ul>`;
+                    sectionEl.innerHTML = html;
+                    container.appendChild(sectionEl);
+                }
+            });
+        }
+
+        function renderAI() {
+            const container = document.getElementById('ai-container');
+            container.innerHTML = '';
+            aiData.forEach(section => {
+                let html = `<section><h3 class="text-lg font-black bg-purple-50 p-1 mb-3 uppercase tracking-tight text-purple-800">${section.category}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-purple-200 pl-4">`;
+                section.items.forEach(i => html += `<div class="p-2 border border-gray-100 rounded hover:bg-gray-50"><a href="${i.url}" target="_blank" class="text-blue-700 hover:underline font-medium">${i.name}</a><p class="text-xs text-gray-400 truncate">${i.url}</p></div>`);
+                container.innerHTML += html + `</div></section>`;
+            });
+        }
+
+        function filterTools() { 
+            renderTools(document.getElementById('search').value); 
+        }
+
+        // Initialize components
+        renderTools();
+        renderAI();
+    </script>
+</body>
+</html>
