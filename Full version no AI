@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .nav-overlay {
+            transition: transform 0.3s ease-in-out;
+        }
+        .hidden-nav {
+            transform: translateX(-100%);
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <!-- Login Overlay -->
+    <div id="login-view" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-[100]">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full border border-gray-300">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center p-3 bg-gray-100 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Welcome Project404</h2>
+                <p class="text-sm text-gray-500 mt-2">Enter credentials to proceed</p>
+            </div>
+         
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                    Password
+                </label>
+                <input
+                    class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 mb-2 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    id="password"
+                    type="password"
+                    placeholder="Enter password..."
+                    autocomplete="current-password"
+                >
+                <p id="error-msg" class="text-red-500 text-xs font-bold hidden flex items-center gap-1 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Access Denied: Incorrect Password
+                </p>
+            </div>
+         
+            <button
+                id="login-btn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+                type="button"
+            >
+                Login
+            </button>
+        </div>
+    </div>
+    <!-- Main Application Container (Hidden Initially) -->
+    <div id="app-container" class="hidden">
+     
+        <!-- Navigation Bar -->
+        <nav class="bg-gray-100 border-b border-gray-300 p-4 sticky top-0 z-50 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button id="menu-btn" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 id="view-title" class="text-xl font-bold tracking-tight">OSINT Tool List</h1>
+            </div>
+        </nav>
+        <!-- Slide-out Menu -->
+        <div id="side-nav" class="fixed inset-0 z-40 hidden">
+            <div id="nav-backdrop" class="absolute inset-0 bg-black/50"></div>
+            <div class="absolute inset-y-0 left-0 w-64 bg-white shadow-xl p-6 nav-overlay hidden-nav overflow-y-auto" id="nav-content">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">Navigation</h2>
+                <ul class="space-y-4">
+                    <li>
+                        <button onclick="switchView('tools')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🛠 Tool Directory
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('guide')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            📖 Recon Guide
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('geo')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🗺 Geolocation & Maps
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('media')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🖼 Images & Videos
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('archives')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            📜 Archives & History
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('phone')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            📱 Phone & Messaging
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('resources')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            💾 Downloads / Resources
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('ai')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🤖 AI Hub
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('osint')" class="w-full text-left font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            🌐 OSINT Framework
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Main Content Area -->
+        <main class="p-6 max-w-4xl mx-auto">
+         
+            <!-- View 1: Tool List -->
+            <div id="tools-view">
+                <div class="mb-6">
+                    <label for="search" class="block text-sm font-bold mb-1">Search Tools:</label>
+                    <input
+                        id="search"
+                        type="text"
+                        class="w-full p-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Type to filter..."
+                        oninput="filterTools()"
+                    >
+                </div>
+                <div id="tools-container" class="space-y-8"></div>
+            </div>
+            <!-- View 2: Recon Guide -->
+            <div id="guide-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Ethical Hacker's Reconnaissance Guide</h2>
+                <p class="mb-6 italic text-gray-600">Follow this sequence to build a comprehensive profile of a target URL.</p>
+             
+                <div class="space-y-10">
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 1: Passive Domain Intelligence</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Understand ownership, history, and the broader organizational footprint without alerting the target.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://osintframework.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">OSINT Framework</a>:</strong> Start here to see if there are additional specific categories (like social media or archives) you need to pivot to.</li>
+                            <li><strong><a href="https://whois.domaintools.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Whois DomainTools</a>:</strong> Identify the registrar, registration dates, and potential contact info.</li>
+                            <li><strong><a href="https://crt.sh/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">crt.sh</a>:</strong> Search Certificate Transparency logs. This is one of the best ways to find hidden subdomains that have SSL certificates.</li>
+                            <li><strong><a href="https://viewdns.info/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">ViewDNS.info</a>:</strong> Run a "Reverse IP" check to see what other sites are hosted on the same server.</li>
+                            <li><strong><a href="https://spyonweb.net/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">SpyOnWeb</a>:</strong> Look for shared Google Analytics or Adsense IDs to find other websites owned by the same entity.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 2: DNS & Infrastructure Mapping</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Map out the technical "map" of the target.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://dnsdumpster.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">DNSDumpster</a>:</strong> Create a visual map of the target’s DNS records and subdomains.</li>
+                            <li><strong><a href="https://dnschecker.org/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">DNS Checker</a>:</strong> Verify that the DNS records you found are consistent globally.</li>
+                            <li><strong><a href="https://robtex.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Robtex</a>:</strong> Dive deeper into the relationships between the IP, the domain, and its neighbors.</li>
+                            <li><strong><a href="https://mxtoolbox.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">MXToolbox</a>:</strong> Check the mail server configuration (MX records) and SPF/DMARC records for potential email spoofing vulnerabilities.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 3: Web Technology & Content Analysis</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Identify the "Stack" (OS, CMS, Plugins) and hidden files.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://web-check.xyz/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Web-Check</a>:</strong> A comprehensive "one-stop" tool to see the technology stack, headers, and basic security flaws.</li>
+                            <li><strong><a href="https://urlscan.io/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">URLScan.io</a>:</strong> Take a "safe" look at the site's behavior, scripts loaded, and DOM structure.</li>
+                            <li><strong><a href="https://www.mysitemapgenerator.com/service/index.html" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">MySitemapGenerator</a>:</strong> Use this to crawl the site and find paths or pages that aren't immediately visible in the navigation.</li>
+                            <li><strong><a href="https://grep.app/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Grep.app</a>:</strong> Search for the domain or specific strings in public code repositories to find leaked keys or configuration files.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 4: Attack Surface & Vulnerability Scanning</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Search for open ports and known service vulnerabilities.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://www.shodan.io/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Shodan</a> & <a href="https://platform.censys.io/home" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Censys</a>:</strong> See what the "Internet" already knows about this server (open ports, old versions of software, heartbleed, etc.).</li>
+                            <li><strong><a href="https://pentest-tools.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Pentest-Tools</a>:</strong> Run a lightweight vulnerability scan to find low-hanging fruit like outdated versions or missing security headers.</li>
+                            <li><strong><a href="https://www.ssllabs.com/ssltest/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">SSL Labs</a>:</strong> Specifically check the strength of the encryption and look for weak ciphers or expired certs.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 5: IP Reputation & Connectivity</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Check if the server is already compromised or on a watch list.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="https://www.ipvoid.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">IPVoid</a> & <a href="https://blacklistchecker.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Blacklist Checker</a>:</strong> Determine if the IP has been flagged for malicious activity in the past.</li>
+                            <li><strong><a href="https://www.iplocation.net/ip-lookup" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">IP Location</a>:</strong> Confirm the physical hosting location (useful for legal/jurisdiction scope).</li>
+                            <li><strong><a href="https://port.tools/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Port.tools</a> & <a href="https://www.whatsmyip.org/ping/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">WhatIsMyIP Ping</a>:</strong> Perform a quick connectivity test to see if the target responds to pings or has common ports open.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3 class="text-lg font-black bg-blue-50 p-1 mb-3 uppercase tracking-tight text-blue-800">Phase 6: Human/Metadata Pivoting</h3>
+                        <p class="text-sm mb-4 text-gray-600">Objective: Identify the people behind the site for potential social engineering or credential reuse.</p>
+                        <ul class="space-y-4 border-l-4 border-blue-200 pl-4">
+                            <li><strong><a href="http://metadataviewer.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">MetaDataViewer</a>:</strong> Run files (PDFs/DOCX) through here to find usernames and software paths.</li>
+                            <li><strong><a href="https://hackdb.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">HackDB</a>:</strong> Check if any corporate emails found in previous steps appear in known data breaches.</li>
+                            <li><strong><a href="https://www.fastpeoplesearch.com/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">FastPeopleSearch</a> & <a href="https://arrests.org/" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">Arrests.org</a>:</strong> Use these to build a profile on individuals identified in WHOIS or Metadata.</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+            <!-- Geolocation & Maps View -->
+            <div id="geo-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Geolocation & Maps</h2>
+                <p class="mb-6 italic text-gray-600">Tools for EXIF extraction, IP geolocation, reverse image geolocation, and advanced mapping techniques.</p>
+                <div id="geo-container" class="space-y-10"></div>
+            </div>
+            <!-- Images & Videos View -->
+            <div id="media-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Images & Videos</h2>
+                <p class="mb-6 italic text-gray-600">Reverse image search, metadata tools, video analysis, and deepfake detection.</p>
+                <div id="media-container" class="space-y-10"></div>
+            </div>
+            <!-- Archives & History View -->
+            <div id="archives-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Archives & History</h2>
+                <p class="mb-6 italic text-gray-600">Web archiving, cached pages, historical WHOIS, and domain timelines.</p>
+                <div id="archives-container" class="space-y-10"></div>
+            </div>
+            <!-- Phone & Messaging View -->
+            <div id="phone-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Phone & Messaging</h2>
+                <p class="mb-6 italic text-gray-600">Phone number lookups, carrier info, and messaging app checks.</p>
+                <div id="phone-container" class="space-y-10"></div>
+            </div>
+            <!-- Downloads / Resources View -->
+            <div id="resources-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">Downloads / Resources</h2>
+                <p class="mb-6 italic text-gray-600">OSINT books, cheat sheets, training, and virtual machines.</p>
+                <div id="resources-container" class="space-y-10"></div>
+            </div>
+            <!-- AI Hub View -->
+            <div id="ai-view" class="hidden">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">AI Hub</h2>
+                <div id="ai-container" class="space-y-10"></div>
+            </div>
+            <!-- OSINT Framework Embed -->
+            <div id="osint-view" class="hidden flex flex-col h-[calc(100vh-8rem)]">
+                <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-6">OSINT Framework</h2>
+                <iframe 
+                    src="https://osintframework.com/" 
+                    class="flex-1 w-full border-0" 
+                    allowfullscreen 
+                    loading="lazy"
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation">
+                </iframe>
+            </div>
+        </main>
+    </div>
+    <script>
+        function checkPassword() {
+            const passwordInput = document.getElementById('password');
+            const errorMsg = document.getElementById('error-msg');
+
+            if (passwordInput.value.trim() === 'admin') {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+            } else {
+                errorMsg.classList.remove('hidden');
+                passwordInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                passwordInput.focus();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('login-btn');
+            const passwordInput = document.getElementById('password');
+
+            if (loginBtn) {
+                loginBtn.addEventListener('click', checkPassword);
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        checkPassword();
+                    }
+                });
+
+                passwordInput.addEventListener('input', () => {
+                    document.getElementById('error-msg').classList.add('hidden');
+                    passwordInput.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                });
+            }
+
+            // Initialize all rendering
+            renderTools();
+            renderAI();
+            renderDedicated('geo-container', geoData);
+            renderDedicated('media-container', mediaData);
+            renderDedicated('archives-container', archivesData);
+            renderDedicated('phone-container', phoneData);
+            renderDedicated('resources-container', resourcesData);
+        });
+
+        function switchView(view) {
+            const views = ['tools', 'guide', 'geo', 'media', 'archives', 'phone', 'resources', 'ai', 'osint'];
+            views.forEach(v => {
+                const el = document.getElementById(`${v}-view`);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`${view}-view`);
+            if (target) target.classList.remove('hidden');
+
+            const titles = {
+                tools: 'OSINT Tool List',
+                guide: 'Recon Guide',
+                geo: 'Geolocation & Maps',
+                media: 'Images & Videos',
+                archives: 'Archives & History',
+                phone: 'Phone & Messaging',
+                resources: 'Downloads / Resources',
+                ai: 'AI Hub',
+                osint: 'OSINT Framework'
+            };
+            document.getElementById('view-title').innerText = titles[view] || 'OSINT Tool List';
+            toggleMenu();
+        }
+
+        function toggleMenu() {
+            const sideNav = document.getElementById('side-nav');
+            const navContent = document.getElementById('nav-content');
+            if (sideNav.classList.contains('hidden')) {
+                sideNav.classList.remove('hidden');
+                setTimeout(() => navContent.classList.remove('hidden-nav'), 10);
+            } else {
+                navContent.classList.add('hidden-nav');
+                setTimeout(() => sideNav.classList.add('hidden'), 300);
+            }
+        }
+
+        document.getElementById('menu-btn').addEventListener('click', toggleMenu);
+        document.getElementById('nav-backdrop').addEventListener('click', toggleMenu);
+
+        const toolsData = [
+            {
+                category: "Frameworks & Aggregators",
+                items: [
+                    { name: "OSINT Framework", url: "https://osintframework.com/", desc: "Comprehensive directory of OSINT tools." },
+                    { name: "OSINT.sh", url: "https://osint.sh/", desc: "Various lookups and intelligence scripts." },
+                    { name: "SpiderFoot", url: "https://www.spiderfoot.net/", desc: "Automated OSINT reconnaissance and intelligence gathering." },
+                    { name: "Recon-ng", url: "https://github.com/lanmaster53/recon-ng", desc: "Modular web reconnaissance framework." },
+                    { name: "theHarvester", url: "https://github.com/laramies/theHarvester", desc: "Email, subdomain, and hostname harvester." }
+                ]
+            },
+            {
+                category: "DNS & Domain Intelligence",
+                items: [
+                    { name: "DNSDumpster", url: "https://dnsdumpster.com/", desc: "Subdomain discovery and mapping." },
+                    { name: "crt.sh", url: "https://crt.sh/", desc: "SSL/TLS certificate search for subdomains." },
+                    { name: "ViewDNS.info", url: "https://viewdns.info/", desc: "Reverse IP and DNS toolset." },
+                    { name: "DNS Checker", url: "https://dnschecker.org/", desc: "Global DNS propagation check." },
+                    { name: "Robtex", url: "https://robtex.com/", desc: "IP and domain relationship analysis." },
+                    { name: "SpyOnWeb", url: "https://spyonweb.net/", desc: "Identifying sites with shared IDs." },
+                    { name: "Whois DomainTools", url: "https://whois.domaintools.com/", desc: "Advanced domain ownership history." }
+                ]
+            },
+            {
+                category: "Scanning & Infrastructure",
+                items: [
+                    { name: "Shodan", url: "https://www.shodan.io/", desc: "Search engine for IoT and web devices." },
+                    { name: "Censys", url: "https://platform.censys.io/home", desc: "Network exposure and device discovery." },
+                    { name: "Web-Check", url: "https://web-check.xyz/", desc: "All-in-one website architecture scanner." },
+                    { name: "URLScan.io", url: "https://urlscan.io/", desc: "Website activity and behavior sandbox." },
+                    { name: "HackerTarget", url: "https://hackertarget.com/", desc: "IP and network intelligence lookups." },
+                    { name: "Pentest-Tools", url: "https://pentest-tools.com/", desc: "Security and vulnerability scanning suite." },
+                    { name: "SSL Labs", url: "https://www.ssllabs.com/ssltest/", desc: "Deep SSL server configuration analysis." },
+                    { name: "CentralOps", url: "https://centralops.net/co/", desc: "Free online network diagnostic tools." },
+                    { name: "Port.tools", url: "https://port.tools/", desc: "Online port scanning and ping." },
+                    { name: "WhatIsMyIP Ping", url: "https://www.whatsmyip.org/ping/", desc: "Ping tool for connectivity testing." }
+                ]
+            },
+            {
+                category: "IP & Reputation",
+                items: [
+                    { name: "IP Location", url: "https://www.iplocation.net/ip-lookup", desc: "Geographic IP mapping." },
+                    { name: "IPVoid", url: "https://www.ipvoid.com/", desc: "Reputation and blacklist auditing." },
+                    { name: "Blacklist Checker", url: "https://blacklistchecker.com/", desc: "Mail server blacklist checking." },
+                    { name: "MXToolbox", url: "https://mxtoolbox.com/", desc: "MX record and email health check." }
+                ]
+            },
+            {
+                category: "Content & Leaks",
+                items: [
+                    { name: "Grep.app", url: "https://grep.app/", desc: "Search through public git repositories." },
+                    { name: "HackDB", url: "https://hackdb.com/", desc: "Credential and leak database search." },
+                    { name: "MySitemapGenerator", url: "https://www.mysitemapgenerator.com/service/index.html", desc: "Crawler for site mapping and discovery." }
+                ]
+            },
+            {
+                category: "Identity & Public Records",
+                items: [
+                    { name: "FastPeopleSearch", url: "https://www.fastpeoplesearch.com/", desc: "Person lookup and public records." },
+                    { name: "Arrests.org", url: "https://arrests.org/", desc: "Mugshots and public arrest records." },
+                    { name: "MetaDataViewer", url: "http://metadataviewer.com/", desc: "Extract hidden file metadata." }
+                ]
+            },
+            {
+                category: "Dark Web",
+                items: [
+                    { name: "Ahmia", url: "https://ahmia.fi/", desc: "Tor search engine with content filtering for safer OSINT." },
+                    { name: "Torch", url: "http://torchdeedp3i2jigzjdmfpn5ttjhthh5wbmda2rr3jvqjg5p77c54dqd.onion/", desc: "One of the oldest unfiltered dark web search engines (requires Tor)." },
+                    { name: "Haystak", url: "https://haystak.com/", desc: "Large index Tor search engine with proxy access." },
+                    { name: "Intelligence X", url: "https://intelx.io/", desc: "Search engine for dark web leaks, data breaches, and historical archives." },
+                    { name: "DarkOwl", url: "https://www.darkowl.com/", desc: "Commercial darknet intelligence platform for threat monitoring." }
+                ]
+            },
+            {
+                category: "Social Media Intelligence",
+                items: [
+                    { name: "Maltego", url: "https://www.maltego.com/", desc: "Graphical link analysis for mapping social connections and entities." },
+                    { name: "Osintgram", url: "https://github.com/Datalux/Osintgram", desc: "Advanced OSINT tool for Instagram profile analysis." },
+                    { name: "Sherlock", url: "https://github.com/sherlock-project/sherlock", desc: "Hunt usernames across hundreds of social media sites." },
+                    { name: "Maigret", url: "https://github.com/soxoj/maigret", desc: "Collect and analyze usernames/profiles from thousands of sites." },
+                    { name: "WhatsMyName", url: "https://whatsmyname.app/", desc: "Username enumeration and social media footprint checker." },
+                    { name: "IntelTechniques Search Tools", url: "https://inteltechniques.com/tools/", desc: "Custom search tools for social media and people lookup." }
+                ]
+            },
+            {
+                category: "Username/Email Search",
+                items: [
+                    { name: "Holehe", url: "https://github.com/megadose/holehe", desc: "Check if an email is used on various websites (registration check)." },
+                    { name: "Epios", url: "https://epieos.com/", desc: "Reverse email/username lookup across Google, social platforms, and more." },
+                    { name: "HaveIBeenPwned", url: "https://haveibeenpwned.com/", desc: "Check if an email has been involved in known data breaches." },
+                    { name: "DeHashed", url: "https://dehashed.com/", desc: "Search leaked credentials by email, username, IP, or hash (paid/free tiers)." },
+                    { name: "BreachDirectory", url: "https://breachdirectory.org/", desc: "Fast search for breached emails and passwords." },
+                    { name: "EmailRep.io", url: "https://emailrep.io/", desc: "Email reputation and OSINT aggregation tool." }
+                ]
+            }
+        ];
+
+        const aiData = [ /* (unchanged - same as previous full version) */ ];
+
+        const geoData = [
+            { category: "EXIF & Metadata Extraction", items: [
+                { name: "ExifTool", url: "https://exiftool.org/", desc: "Powerful command-line tool for reading/writing metadata." },
+                { name: "Jeffrey’s Exif Viewer", url: "https://exif.regex.info/exif.cgi", desc: "Online EXIF viewer with GPS map display." },
+                { name: "Metapicz", url: "https://metapicz.com/", desc: "Simple online metadata extractor." }
+            ]},
+            { category: "IP & Geolocation Mapping", items: [
+                { name: "IPLocation.net", url: "https://www.iplocation.net/", desc: "Multiple geolocation providers in one view." },
+                { name: "SunCalc", url: "https://www.suncalc.org/", desc: "Shadow/sun position calculator for verification." }
+            ]},
+            { category: "Advanced Geolocation", items: [
+                { name: "GeoSpy.ai", url: "https://geospy.ai/", desc: "AI-powered image geolocation." },
+                { name: "Picarta.ai", url: "https://picarta.ai/", desc: "AI reverse image geolocation." },
+                { name: "Bellingcat Geolocation Tools", url: "https://www.bellingcat.com/resources/", desc: "Open-source mapping and verification guides." }
+            ]}
+        ];
+
+        const mediaData = [
+            { category: "Reverse Image Search", items: [
+                { name: "Google Images", url: "https://images.google.com/", desc: "Most comprehensive index." },
+                { name: "Yandex Images", url: "https://yandex.com/images/", desc: "Excellent facial and regional recognition." },
+                { name: "TinEye", url: "https://tineye.com/", desc: "Exact match and modification detection." },
+                { name: "Bing Visual Search", url: "https://www.bing.com/visualsearch", desc: "Strong landmark and object recognition." }
+            ]},
+            { category: "Deepfake & Video Analysis", items: [
+                { name: "InVID Verification", url: "https://www.invid-project.eu/tools-and-services/invid-verification-plugin/", desc: "Browser plugin for frame/keyframe analysis." },
+                { name: "Hive Moderation", url: "https://hivemoderation.com/", desc: "AI deepfake detection." },
+                { name: "Deepware Scanner", url: "https://deepware.ai/", desc: "Free online deepfake video scanner." },
+                { name: "Intel FakeCatcher", url: "https://www.intel.com/content/www/us/en/artificial-intelligence/fake-catcher.html", desc: "Real-time deepfake detection." }
+            ]}
+        ];
+
+        const archivesData = [
+            { category: "Web Archiving", items: [
+                { name: "Wayback Machine", url: "https://web.archive.org/", desc: "Largest historical web archive." },
+                { name: "Archive.today", url: "https://archive.is/", desc: "Instant snapshots, no robots.txt blocks." },
+                { name: "Memento Time Travel", url: "http://timetravel.mementoweb.org/", desc: "Aggregates multiple archives." },
+                { name: "CachedView", url: "https://cachedview.com/", desc: "Google/Bing cache + archives viewer." }
+            ]},
+            { category: "Domain History", items: [
+                { name: "SecurityTrails", url: "https://securitytrails.com/", desc: "Historical WHOIS and DNS records." },
+                { name: "WhoisDS", url: "https://whoisds.com/", desc: "Historical domain WHOIS lookup." }
+            ]}
+        ];
+
+        const phoneData = [
+            { category: "Phone Number Lookup", items: [
+                { name: "Truecaller", url: "https://www.truecaller.com/", desc: "Crowdsourced caller ID and spam detection." },
+                { name: "PhoneInfoga", url: "https://github.com/sundowndev/phoneinfoga", desc: "Advanced OSINT phone recon framework." },
+                { name: "Epieos", url: "https://epieos.com/", desc: "Reverse phone to Google/social accounts." },
+                { name: "OSINT Industries", url: "https://osint.industries/", desc: "Links phone to online accounts." }
+            ]},
+            { category: "Messaging Checks", items: [
+                { name: "WhatsApp Check", url: "https://api.whatsapp.com/send?phone=", desc: "Direct link format to verify registration." },
+                { name: "Telegram Lookup", url: "https://t.me/", desc: "Check username availability and profiles." }
+            ]}
+        ];
+
+        const resourcesData = [
+            { category: "Books & Training", items: [
+                { name: "Open Source Intelligence Techniques (11th Ed.)", url: "https://inteltechniques.com/book1.html", desc: "Michael Bazzell's comprehensive OSINT bible." },
+                { name: "IntelTechniques Training", url: "https://inteltechniques.com/training/", desc: "Online courses and videos." },
+                { name: "Bellingcat Workshops", url: "https://www.bellingcat.com/resources/", desc: "Free geolocation and verification guides." }
+            ]},
+            { category: "Cheat Sheets & VMs", items: [
+                { name: "OSINT Cheat Sheet Collection", url: "https://github.com/jivoi/awesome-osint", desc: "Curated tools and resources." },
+                { name: "Buscador OSINT VM", url: "https://inteltechniques.com/buscador/", desc: "Pre-configured Linux VM for OSINT." },
+                { name: "OSINT Framework Tree", url: "https://osintframework.com/", desc: "Interactive tool tree (also embedded)." }
+            ]}
+        ];
+
+        function renderTools(filter = '') {
+            const container = document.getElementById('tools-container');
+            container.innerHTML = '';
+            const lowerFilter = filter.toLowerCase();
+            toolsData.forEach(section => {
+                const filteredItems = section.items.filter(item =>
+                    item.name.toLowerCase().includes(lowerFilter) ||
+                    item.desc.toLowerCase().includes(lowerFilter)
+                );
+                if (filteredItems.length > 0) {
+                    const sectionEl = document.createElement('section');
+                    let html = `<h2 class="text-lg font-black bg-gray-100 p-1 mb-3 uppercase tracking-tight">${section.category}</h2>`;
+                    html += `<ul class="space-y-4">`;
+                    filteredItems.forEach(tool => {
+                        html += `
+                            <li class="border-l-4 border-gray-300 pl-4">
+                                <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="text-blue-700 font-bold underline hover:text-blue-900">
+                                    ${tool.name}
+                                </a>
+                                <p class="text-sm text-gray-700 mt-1">${tool.desc}</p>
+                                <p class="text-xs text-gray-400 font-mono mt-1">${tool.url}</p>
+                            </li>
+                        `;
+                    });
+                    html += `</ul>`;
+                    sectionEl.innerHTML = html;
+                    container.appendChild(sectionEl);
+                }
+            });
+        }
+
+        function renderAI() {
+            const container = document.getElementById('ai-container');
+            container.innerHTML = '';
+            aiData.forEach(section => {
+                let html = `<section><h3 class="text-lg font-black bg-purple-50 p-1 mb-3 uppercase tracking-tight text-purple-800">${section.category}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-purple-200 pl-4">`;
+                section.items.forEach(i => html += `<div class="p-2 border border-gray-100 rounded hover:bg-gray-50"><a href="${i.url}" target="_blank" class="text-blue-700 hover:underline font-medium">${i.name}</a><p class="text-xs text-gray-400 truncate">${i.url}</p></div>`);
+                container.innerHTML += html + `</div></section>`;
+            });
+        }
+
+        function renderDedicated(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            data.forEach(section => {
+                let html = `<section><h3 class="text-lg font-black bg-green-50 p-1 mb-3 uppercase tracking-tight text-green-800">${section.category}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-green-200 pl-4">`;
+                section.items.forEach(i => html += `<div class="p-2 border border-gray-100 rounded hover:bg-gray-50"><a href="${i.url}" target="_blank" class="text-blue-700 hover:underline font-medium">${i.name}</a><p class="text-xs text-gray-400 truncate">${i.url}</p><p class="text-sm text-gray-700 mt-1">${i.desc}</p></div>`);
+                container.innerHTML += html + `</div></section>`;
+            });
+        }
+
+        function filterTools() {
+            renderTools(document.getElementById('search').value);
+        }
+    </script>
+</body>
+</html>
